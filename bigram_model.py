@@ -14,7 +14,6 @@ iteration_checkpoint = 100
 learning_rate = 1e-3
 device = "mps" if torch.backends.mps.is_available() else 'cpu' # For MacOS GPU acceleration
 eval_iters = 10
-# ------------
 
 torch.manual_seed(1234)
 
@@ -102,7 +101,7 @@ def estimate_loss():
     model.train()
     return out
 
-# super simple bigram model
+# Bigram Language Model
 class BigramLanguageModel(nn.Module):
 
     def __init__(self, vocab_size):
@@ -173,6 +172,7 @@ for iter in range(iterations):
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(full_decode(decoder(m.generate(context, max_new_tokens=500)[0].tolist())))
 
+# Plot the Training and Validation Loss
 plt.figure(figsize=(10, 6))
 plt.plot(iteration_steps, train_losses, label='Training Loss')
 plt.plot(iteration_steps, val_losses, label='Validation Loss')
