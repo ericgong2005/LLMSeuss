@@ -170,7 +170,12 @@ for iter in range(iterations):
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(full_decode(decoder(m.generate(context, max_new_tokens=500)[0].tolist())))
+
+generation = full_decode(decoder(m.generate(context, max_new_tokens=500)[0].tolist()))
+
+current_time = datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
+with open(f"Bigram_model_generations/bigram_generation_{current_time}.txt", "w") as f:
+    f.write(generation)
 
 # Plot the Training and Validation Loss
 plt.figure(figsize=(10, 6))
@@ -190,6 +195,5 @@ hyperparameters_text = (f"Hyperparameters:\n"
 plt.text(0.95, 0.95, hyperparameters_text, transform=plt.gca().transAxes,
          fontsize=10, verticalalignment='top', horizontalalignment='right',
          bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
-current_time = datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
 plt.savefig(f"Bigram_model_loss_plots/bigram_loss_{current_time}.png")
 plt.close()

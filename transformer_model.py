@@ -10,7 +10,7 @@ from datetime import datetime
 batch_size = 64
 block_size = 128
 iterations = 2000
-iteration_checkpoint = 100
+iteration_checkpoint = 20
 learning_rate = 3e-4
 device = "mps" if torch.backends.mps.is_available() else 'cpu' # For MacOS GPU acceleration
 loss_evaluation_iterations = 100
@@ -274,7 +274,12 @@ for iter in range(iterations):
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(full_decode(decoder(m.generate(context, max_new_tokens=500)[0].tolist())))
+
+generation = full_decode(decoder(m.generate(context, max_new_tokens=500)[0].tolist()))
+
+current_time = datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
+with open(f"Transformer_model_generations/transformer_generation_{current_time}.txt", "w") as f:
+    f.write(generation)
 
 # Plot the Training and Validation Loss
 plt.figure(figsize=(10, 6))
@@ -299,6 +304,6 @@ hyperparameters_text = (f"Properties:\n"
 plt.text(0.95, 0.95, hyperparameters_text, transform=plt.gca().transAxes,
          fontsize=10, verticalalignment='top', horizontalalignment='right',
          bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
-current_time = datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
+
 plt.savefig(f"Transformer_model_loss_plots/transformer_loss_{current_time}.png")
 plt.close()
