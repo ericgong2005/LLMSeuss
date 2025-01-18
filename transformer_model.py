@@ -13,10 +13,10 @@ iterations = 2000
 iteration_checkpoint = 20
 learning_rate = 3e-4
 device = "mps" if torch.backends.mps.is_available() else 'cpu' # For MacOS GPU acceleration
-loss_evaluation_iterations = 100
-embedding_count = 384
-head_count = 6
-layer_count = 6
+loss_evaluation_iterations = 64
+embedding_count = 256
+head_count = 4
+layer_count = 4
 dropout_rate = 0.2
 
 torch.manual_seed(1234)
