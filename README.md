@@ -28,7 +28,9 @@ The transformer Language Model performs better, although unfortunately, the trai
 However, amidst the garbled mess, there is nonetheless some semblences of meaning, for example one more coherent subsection of "Transformer_model_generations/transformer_generation_2025-01-18_12_38_00.txt" we have:
 
 *What THEN!*
+
 *Well...*
+
 *There is no way at all!*
 
 ## Conclusions
