@@ -111,8 +111,8 @@ class BigramLanguageModel(nn.Module):
 
     def forward(self, idx, targets=None):
 
-        # idx and targets are both (Batch x Text) tensors
-        logits = self.token_embedding_table(idx) # (Batch x Text x Channels)
+        # idx and targets are both (Batch x Time) tensors
+        logits = self.token_embedding_table(idx) # (Batch x Time x Channels)
 
         if targets is None:
             loss = None
@@ -125,18 +125,18 @@ class BigramLanguageModel(nn.Module):
         return logits, loss
 
     def generate(self, idx, max_new_tokens):
-        # idx is (Batch x Text) array of indices in the current context
+        # idx is (Batch x Time) array of indices in the current context
         for _ in range(max_new_tokens):
             # get the predictions
             logits, loss = self(idx)
-            # focus only on the last time step
+            # focus only on the last Time step
             logits = logits[:, -1, :] # becomes (Batch x Channels)
             # apply softmax to get probabilities
             probs = F.softmax(logits, dim=-1) # (Batch x Channels)
             # sample from the distribution
             idx_next = torch.multinomial(probs, num_samples=1) # (Batch x 1)
             # append sampled index to the running sequence
-            idx = torch.cat((idx, idx_next), dim=1) # (Batch x Text + 1)
+            idx = torch.cat((idx, idx_next), dim=1) # (Batch x Time + 1)
         return idx
 
 model = BigramLanguageModel(vocab_size)
