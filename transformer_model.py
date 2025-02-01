@@ -7,16 +7,27 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 # hyperparameters
-batch_size = 64
-block_size = 128
-iterations = 2000
-iteration_checkpoint = 20
-learning_rate = 3e-4
+# batch_size = 64
+# block_size = 128
+# iterations = 2000
+# iteration_checkpoint = 20
+# learning_rate = 1e-6
+# device = "mps" if torch.backends.mps.is_available() else 'cpu' # For MacOS GPU acceleration
+# loss_evaluation_iterations = 64
+# embedding_count = 256
+# head_count = 4
+# layer_count = 4
+# dropout_rate = 0.2
+batch_size = 16
+block_size = 8
+iterations = 100
+iteration_checkpoint = 5
+learning_rate = 1e-2
 device = "mps" if torch.backends.mps.is_available() else 'cpu' # For MacOS GPU acceleration
-loss_evaluation_iterations = 64
-embedding_count = 256
-head_count = 4
-layer_count = 4
+loss_evaluation_iterations = 4
+embedding_count = 64
+head_count = 1
+layer_count = 1
 dropout_rate = 0.2
 
 torch.manual_seed(1234)
@@ -27,18 +38,22 @@ print(f"Using {device}\n")
 with open('seuss_works.txt', 'r', encoding='utf-8') as f:
     training_text = f.read()
 
-pattern = r'(\w+|[^\w\s]|\s|\n)'
-split = re.findall(pattern, training_text)
-formatted = []
-for word in split:
-    if word.istitle():
-        formatted.append("<C>")
-        formatted.append(word.lower())
-    elif word.isupper():
-        formatted.append("<A>")
-        formatted.append(word.lower())
-    else:
-        formatted.append(word)
+def splitter(text : str) -> list[str]:
+    pattern = r'(\w+|[^\w\s]|\s|\n)'
+    split = re.findall(pattern, text)
+    formatted = []
+    for word in split:
+        if word.istitle():
+            formatted.append("<C>")
+            formatted.append(word.lower())
+        elif word.isupper():
+            formatted.append("<A>")
+            formatted.append(word.lower())
+        else:
+            formatted.append(word)
+    return formatted
+
+formatted = splitter(training_text)
 
 unique = set(formatted)
 
@@ -84,7 +99,7 @@ vocab_size = len(tokens)
 # data loading
 def get_batch(type: str):
     # generate a batch of inputs x and targets y
-    data = training if split == 'training' else validation
+    data = training if type == 'training' else validation
     ix = torch.randint(len(data) - block_size, (batch_size,))
     x = torch.stack([data[i:i+block_size] for i in ix])
     y = torch.stack([data[i+1:i+block_size+1] for i in ix])
@@ -272,16 +287,8 @@ for iter in range(iterations):
     loss.backward()
     optimizer.step()
 
-# generate from the model
-context = torch.zeros((1, 1), dtype=torch.long, device=device)
-
-generation = full_decode(decoder(m.generate(context, max_new_tokens=500)[0].tolist()))
-
-current_time = datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
-with open(f"Transformer_model_generations/transformer_generation_{current_time}.txt", "w") as f:
-    f.write(generation)
-
 # Plot the Training and Validation Loss
+current_time = datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
 plt.figure(figsize=(10, 6))
 plt.plot(iteration_steps, train_losses, label='Training Loss')
 plt.plot(iteration_steps, val_losses, label='Validation Loss')
@@ -307,3 +314,27 @@ plt.text(0.95, 0.95, hyperparameters_text, transform=plt.gca().transAxes,
 
 plt.savefig(f"Transformer_model_loss_plots/transformer_loss_{current_time}.png")
 plt.close()
+
+# generate from the model
+start_string = "The cat in the hat"
+
+context = torch.tensor(encoder(splitter(start_string)), dtype=torch.long, device=device).unsqueeze(0)
+
+generation = full_decode(decoder(m.generate(context, max_new_tokens=100)[0].tolist()))
+
+print(generation)
+
+current_time = datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
+with open(f"Transformer_model_generations/transformer_generation_{current_time}.txt", "w") as f:
+    f.write((f"PROPERTIES:\n"
+                        f"\tBatch size: {batch_size}\n"
+                        f"\tBlock size: {block_size}\n"
+                        f"\tIterations: {iterations}\n"
+                        f"\tLearning rate: {learning_rate}\n"
+                        f"\tEmbeddings: {head_count}\n"
+                        f"\tHeads: {iterations}\n"
+                        f"\tLayers: {layer_count}\n"
+                        f"\tParameters: {parameter_count}\n"
+                        f"\tDevice: {device}\n\n"))
+    f.write("START OF GENERATION:")
+    f.write(generation)
